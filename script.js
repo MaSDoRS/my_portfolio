@@ -129,7 +129,11 @@ function closeProjectModal() {
     document.getElementById('project-id').value = '';
     // Reset persyaratan gambar
     document.getElementById('project-image').required = true; 
-    document.getElementById('current-image-info').style.display = 'none'; // Sembunyikan info gambar saat menutup
+    document.getElementById('current-image-info-small').remove(); // Hapus elemen kecil jika ada
+    
+    // Reset elemen small info gambar (untuk mencegah error jika belum ada)
+    const currentInfoElement = document.getElementById('current-image-info');
+    if (currentInfoElement) currentInfoElement.remove();
 }
 
 /**
@@ -137,6 +141,15 @@ function closeProjectModal() {
  * @param {object} project - Objek proyek yang akan diedit. Jika null, maka mode Add New.
  */
 function showAddProjectModal(project = null) {
+    // Panggil closeProjectModal untuk reset form dan elemen tersembunyi
+    // Sebelum memanggil showAddProjectModal, pastikan form ter-reset
+    projectForm.reset();
+    
+    // Hapus elemen current-image-info jika ada
+    let currentInfoElement = document.getElementById('current-image-info-small');
+    if (currentInfoElement) currentInfoElement.remove();
+
+
     if (project) {
         // --- Mode Edit ---
         document.getElementById('modal-title').textContent = 'Edit Project';
@@ -152,17 +165,21 @@ function showAddProjectModal(project = null) {
         
         // Gambar tidak wajib diubah saat edit, tampilkan info gambar saat ini
         document.getElementById('project-image').required = false; 
-        document.getElementById('current-image-info').innerHTML = `
-            <small>Current Image: <a href="${project.image.length > 50 ? '#' : project.image}" target="_blank">View</a>. Leave empty to keep.</small>
-        `;
-        document.getElementById('current-image-info').style.display = 'block';
+        
+        // Tambahkan elemen small untuk info gambar saat ini
+        const imageFormGroup = document.getElementById('project-image').closest('.form-group');
+        const smallElement = document.createElement('small');
+        smallElement.id = 'current-image-info-small';
+        smallElement.textContent = `Current Image: View image link or choose new file to replace.`;
+        if (imageFormGroup) {
+            imageFormGroup.appendChild(smallElement);
+        }
 
     } else {
         // --- Mode Add New ---
         document.getElementById('modal-title').textContent = 'Add New Project';
         document.getElementById('project-id').value = '';
         document.getElementById('project-image').required = true; // Wajib ada gambar saat menambahkan baru
-        document.getElementById('current-image-info').style.display = 'none';
     }
     projectModal.style.display = 'block';
 }
@@ -175,10 +192,13 @@ function editProject(id) {
 }
 
 // Event listener untuk submit form
-projectForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    await saveProject(e);
-});
+if (projectForm) {
+    projectForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await saveProject(e);
+    });
+}
+
 
 /**
  * Mengambil data dari form, menangani upload/dokumentasi foto, dan menyimpan/mengedit proyek.
@@ -199,7 +219,7 @@ async function saveProject(e) {
         return linkStr.split(',').map(item => {
             const parts = item.split('|');
             return {
-                name: parts[0].trim(),
+                name: parts[0] ? parts[0].trim() : 'Link',
                 url: parts[1] ? parts[1].trim() : '#'
             };
         }).filter(link => link.name && link.url && link.url !== '#');
@@ -212,7 +232,6 @@ async function saveProject(e) {
     // Logika untuk menangani foto/dokumentasi
     if (imageFile) {
         // Menggunakan FileReader untuk mendapatkan URL Data lokal (Data URL)
-        // Ini memungkinkan foto/dokumentasi terlihat langsung di browser (meski tidak ideal untuk produksi)
         imageUrl = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (event) => resolve(event.target.result);
