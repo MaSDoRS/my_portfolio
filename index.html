@@ -56,7 +56,7 @@
             <div class="about-content">
                 <div class="about-image" data-aos="fade-right">
                     <img id="profile-image" src="https://via.placeholder.com/300x300/2d3748/ffffff?text=Profile+Photo" alt="Arya Muhammad Duta Syafinda">
-                    <div class="image-overlay">
+                    <div class="image-overlay admin-only">
                         <button class="btn-change-image" onclick="document.getElementById('image-upload').click()">
                             <i class="fas fa-camera"></i> Change Photo
                         </button>
@@ -86,7 +86,7 @@
                             <span id="linkedin-text">linkedin.com/in/arya-muhammad-duta-syafinda</span>
                         </div>
                     </div>
-                    <button class="btn-edit" onclick="toggleEdit('about')">Edit About Section</button>
+                    <button class="btn-edit admin-only" onclick="toggleEdit('about-description')">Edit About Section</button>
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@
                             <li>3rd Place Winner, Medical Technology Final Project OKKBK 2024</li>
                         </ul>
                     </div>
-                    <button class="btn-edit timeline-edit" onclick="toggleEdit('education-its')">Edit</button>
+                    <button class="btn-edit timeline-edit admin-only" onclick="toggleEdit('education-its')">Edit</button>
                 </div>
                 <div class="timeline-item" data-aos="fade-left">
                     <div class="timeline-content editable" id="education-sma">
@@ -120,7 +120,7 @@
                             <li>Recognized as one of top 4 best graduates</li>
                         </ul>
                     </div>
-                    <button class="btn-edit timeline-edit" onclick="toggleEdit('education-sma')">Edit</button>
+                    <button class="btn-edit timeline-edit admin-only" onclick="toggleEdit('education-sma')">Edit</button>
                 </div>
             </div>
         </div>
@@ -138,7 +138,7 @@
                         <span class="experience-role">Staff/Medical Subdivision</span>
                         <p>Responsible for providing basic medical assistance to participants and coordinating with health teams.</p>
                     </div>
-                    <button class="btn-edit" onclick="toggleEdit('experience-gerigi')">Edit</button>
+                    <button class="btn-edit admin-only" onclick="toggleEdit('experience-gerigi')">Edit</button>
                 </div>
                 <div class="experience-card" data-aos="zoom-in" data-aos-delay="100">
                     <div class="experience-content editable" id="experience-okkbk">
@@ -147,7 +147,7 @@
                         <span class="experience-role">Staff/Operational Division</span>
                         <p>Managed operational aspects including planning, procurement, and logistics for the event.</p>
                     </div>
-                    <button class="btn-edit" onclick="toggleEdit('experience-okkbk')">Edit</button>
+                    <button class="btn-edit admin-only" onclick="toggleEdit('experience-okkbk')">Edit</button>
                 </div>
                 <div class="experience-card" data-aos="zoom-in" data-aos-delay="200">
                     <div class="experience-content editable" id="experience-ipfkk">
@@ -156,7 +156,7 @@
                         <span class="experience-role">Staff/Operational Division</span>
                         <p>Handled operational management from pre-event to post-event stages.</p>
                     </div>
-                    <button class="btn-edit" onclick="toggleEdit('experience-ipfkk')">Edit</button>
+                    <button class="btn-edit admin-only" onclick="toggleEdit('experience-ipfkk')">Edit</button>
                 </div>
                 <div class="experience-card" data-aos="zoom-in" data-aos-delay="300">
                     <div class="experience-content editable" id="experience-ilits">
@@ -165,7 +165,7 @@
                         <span class="experience-role">Staff PDD Division</span>
                         <p>Managed social media, documentation, and public relations activities.</p>
                     </div>
-                    <button class="btn-edit" onclick="toggleEdit('experience-ilits')">Edit</button>
+                    <button class="btn-edit admin-only" onclick="toggleEdit('experience-ilits')">Edit</button>
                 </div>
             </div>
         </div>
@@ -179,7 +179,7 @@
                 <!-- Projects will be loaded here -->
             </div>
             <div class="text-center" data-aos="fade-up">
-                <button class="btn btn-primary" onclick="showAddProjectModal()">
+                <button class="btn btn-primary admin-only" onclick="showAddProjectModal()">
                     <i class="fas fa-plus"></i> Add New Project
                 </button>
             </div>
@@ -192,16 +192,9 @@
             <h2 class="section-title" data-aos="fade-up">Training & Certifications</h2>
             <div class="training-content">
                 <div class="training-list editable" id="training-list" data-aos="fade-up">
-                    <ul>
-                        <li>LKMM Pra-TD I FKK (2024)</li>
-                        <li>PKTI TD (2024)</li>
-                        <li>LKMW TD (2024)</li>
-                        <li>ITS ROBOCON Programming Internship (2024)</li>
-                        <li>LKMM TD II FKK (2025)</li>
-                        <li>PP LKMM I FKK (2025)</li>
-                    </ul>
+                    <!-- Training list will be loaded here -->
                 </div>
-                <button class="btn-edit" onclick="toggleEdit('training-list')">Edit Training</button>
+                <button class="btn-edit admin-only" onclick="toggleEdit('training-list')">Edit Training</button>
             </div>
         </div>
     </section>
@@ -220,29 +213,17 @@
                         <button class="btn btn-danger" onclick="resetData()">Reset to Default</button>
                     </div>
                 </div>
-                
-                <div class="admin-section">
-                    <h3>Add New Section</h3>
-                    <div class="form-group">
-                        <select id="new-section-type" class="form-control">
-                            <option value="experience">Committee Experience</option>
-                            <option value="education">Education</option>
-                            <option value="training">Training</option>
-                            <option value="project">Project</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="addNewSection()">Add Section</button>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
 
-    <!-- Add Project Modal -->
-    <div id="addProjectModal" class="modal">
+    <!-- Add/Edit Project Modal -->
+    <div id="projectModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeAddProjectModal()">&times;</span>
-            <h2>Add New Project</h2>
+            <span class="close" onclick="closeProjectModal()">&times;</span>
+            <h2 id="modal-title">Add New Project</h2>
             <form id="project-form">
+                <input type="hidden" id="project-id">
                 <div class="form-group">
                     <label for="project-title">Project Title</label>
                     <input type="text" id="project-title" class="form-control" required>
@@ -262,12 +243,16 @@
                 <div class="form-group">
                     <label for="project-image">Project Image</label>
                     <input type="file" id="project-image" class="form-control" accept="image/*">
+                    <small>Leave empty to keep current image</small>
                 </div>
                 <div class="form-group">
                     <label for="project-links">Links (format: Description|URL, separate with commas)</label>
                     <input type="text" id="project-links" class="form-control" placeholder="GitHub|https://github.com...,Demo|https://demo.com...">
                 </div>
-                <button type="submit" class="btn btn-primary">Add Project</button>
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">Save Project</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                </div>
             </form>
         </div>
     </div>
