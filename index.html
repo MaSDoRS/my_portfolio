@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arya Muhammad Duta Syafinda - Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span>ARYA MD SYAFINDA</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#home" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
+                <li class="nav-item"><a href="#education" class="nav-link">Education</a></li>
+                <li class="nav-item"><a href="#experience" class="nav-link">Experience</a></li>
+                <li class="nav-item"><a href="#projects" class="nav-link">Projects</a></li>
+                <li class="nav-item"><a href="#training" class="nav-link">Training</a></li>
+                <li class="nav-item admin-only" style="display: none;"><a href="#admin" class="nav-link">Admin</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content" data-aos="fade-up">
+            <h1 class="hero-title">Arya Muhammad Duta Syafinda</h1>
+            <p class="hero-subtitle">Medical Technology Student & Tech Enthusiast</p>
+            <p class="hero-description">Passionate about programming, IoT, data science, and organizational management</p>
+            <div class="hero-buttons">
+                <a href="#projects" class="btn btn-primary">View Projects</a>
+                <a href="#about" class="btn btn-secondary">Learn More</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>Scroll Down</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">About Me</h2>
+            <div class="about-content">
+                <div class="about-image" data-aos="fade-right">
+                    <img id="profile-image" src="https://via.placeholder.com/300x300/2d3748/ffffff?text=Profile+Photo" alt="Arya Muhammad Duta Syafinda">
+                    <div class="image-overlay">
+                        <button class="btn-change-image" onclick="document.getElementById('image-upload').click()">
+                            <i class="fas fa-camera"></i> Change Photo
+                        </button>
+                    </div>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                </div>
+                <div class="about-text" data-aos="fade-left">
+                    <div class="editable" id="about-description">
+                        <p>I am a highly adaptable, disciplined, and proactive individual with a keen interest in both organizational management and fundamental programming concepts. My commitment to student life is demonstrated by my active roles in several key committees during my second year at ITS.</p>
+                        <p>Simultaneously, I possess a strong foundation and practical interest in programming, having executed projects that utilize Python for data processing, Arduino C++ for firmware development, and C++ for implementing core algorithms.</p>
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span id="phone-text">+6281250058588</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span id="email-text">arya.dutaptn@gmail.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="location-text">Surabaya, Indonesia</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fab fa-linkedin"></i>
+                            <span id="linkedin-text">linkedin.com/in/arya-muhammad-duta-syafinda</span>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="toggleEdit('about')">Edit About Section</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Education Section -->
+    <section id="education" class="section bg-dark">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Education</h2>
+            <div class="timeline">
+                <div class="timeline-item" data-aos="fade-right">
+                    <div class="timeline-content editable" id="education-its">
+                        <h3>Sepuluh Nopember Institute of Technology (ITS)</h3>
+                        <span class="timeline-date">Jul 2024 - Present</span>
+                        <p>Undergraduate in Medical Technology - GPA: 3.75/4.00</p>
+                        <ul>
+                            <li>Best Team 1, PKTI-TD FKK Competition 2024</li>
+                            <li>3rd Place Winner, Medical Technology Final Project OKKBK 2024</li>
+                        </ul>
+                    </div>
+                    <button class="btn-edit timeline-edit" onclick="toggleEdit('education-its')">Edit</button>
+                </div>
+                <div class="timeline-item" data-aos="fade-left">
+                    <div class="timeline-content editable" id="education-sma">
+                        <h3>State Senior High School 1 Balikpapan</h3>
+                        <span class="timeline-date">Jun 2021 - May 2024</span>
+                        <p>Science Major - Score: 95.40/100.00</p>
+                        <ul>
+                            <li>Active in Biology Olympiads</li>
+                            <li>Achieved 5th rank in eligibility list</li>
+                            <li>Recognized as one of top 4 best graduates</li>
+                        </ul>
+                    </div>
+                    <button class="btn-edit timeline-edit" onclick="toggleEdit('education-sma')">Edit</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section id="experience" class="section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Committee Experience</h2>
+            <div class="experience-grid">
+                <div class="experience-card" data-aos="zoom-in">
+                    <div class="experience-content editable" id="experience-gerigi">
+                        <h3>GERIGI X UKM EXPO 2025</h3>
+                        <span class="experience-date">Jul 2025 - Aug 2025</span>
+                        <span class="experience-role">Staff/Medical Subdivision</span>
+                        <p>Responsible for providing basic medical assistance to participants and coordinating with health teams.</p>
+                    </div>
+                    <button class="btn-edit" onclick="toggleEdit('experience-gerigi')">Edit</button>
+                </div>
+                <div class="experience-card" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="experience-content editable" id="experience-okkbk">
+                        <h3>OKKBK Medical Technology 2025</h3>
+                        <span class="experience-date">Jul 2025 - Aug 2025</span>
+                        <span class="experience-role">Staff/Operational Division</span>
+                        <p>Managed operational aspects including planning, procurement, and logistics for the event.</p>
+                    </div>
+                    <button class="btn-edit" onclick="toggleEdit('experience-okkbk')">Edit</button>
+                </div>
+                <div class="experience-card" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="experience-content editable" id="experience-ipfkk">
+                        <h3>IPFKK 2025</h3>
+                        <span class="experience-date">Jul 2025 - Aug 2025</span>
+                        <span class="experience-role">Staff/Operational Division</span>
+                        <p>Handled operational management from pre-event to post-event stages.</p>
+                    </div>
+                    <button class="btn-edit" onclick="toggleEdit('experience-ipfkk')">Edit</button>
+                </div>
+                <div class="experience-card" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="experience-content editable" id="experience-ilits">
+                        <h3>ILITS x BALIKPAPAN 2025</h3>
+                        <span class="experience-date">Jan 2025 - Feb 2025</span>
+                        <span class="experience-role">Staff PDD Division</span>
+                        <p>Managed social media, documentation, and public relations activities.</p>
+                    </div>
+                    <button class="btn-edit" onclick="toggleEdit('experience-ilits')">Edit</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="section bg-dark">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Projects</h2>
+            <div class="projects-grid" id="projects-container">
+                <!-- Projects will be loaded here -->
+            </div>
+            <div class="text-center" data-aos="fade-up">
+                <button class="btn btn-primary" onclick="showAddProjectModal()">
+                    <i class="fas fa-plus"></i> Add New Project
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Training Section -->
+    <section id="training" class="section">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Training & Certifications</h2>
+            <div class="training-content">
+                <div class="training-list editable" id="training-list" data-aos="fade-up">
+                    <ul>
+                        <li>LKMM Pra-TD I FKK (2024)</li>
+                        <li>PKTI TD (2024)</li>
+                        <li>LKMW TD (2024)</li>
+                        <li>ITS ROBOCON Programming Internship (2024)</li>
+                        <li>LKMM TD II FKK (2025)</li>
+                        <li>PP LKMM I FKK (2025)</li>
+                    </ul>
+                </div>
+                <button class="btn-edit" onclick="toggleEdit('training-list')">Edit Training</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Panel -->
+    <section id="admin" class="section admin-panel" style="display: none;">
+        <div class="container">
+            <h2 class="section-title">Admin Panel</h2>
+            <div class="admin-content">
+                <div class="admin-section">
+                    <h3>Admin Controls</h3>
+                    <div class="admin-buttons">
+                        <button class="btn btn-primary" onclick="enableEditMode()">Enable Edit Mode</button>
+                        <button class="btn btn-secondary" onclick="disableEditMode()">Disable Edit Mode</button>
+                        <button class="btn btn-warning" onclick="exportData()">Export Data</button>
+                        <button class="btn btn-danger" onclick="resetData()">Reset to Default</button>
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <h3>Add New Section</h3>
+                    <div class="form-group">
+                        <select id="new-section-type" class="form-control">
+                            <option value="experience">Committee Experience</option>
+                            <option value="education">Education</option>
+                            <option value="training">Training</option>
+                            <option value="project">Project</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="addNewSection()">Add Section</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add Project Modal -->
+    <div id="addProjectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddProjectModal()">&times;</span>
+            <h2>Add New Project</h2>
+            <form id="project-form">
+                <div class="form-group">
+                    <label for="project-title">Project Title</label>
+                    <input type="text" id="project-title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-description">Description</label>
+                    <textarea id="project-description" class="form-control" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-technologies">Technologies (comma separated)</label>
+                    <input type="text" id="project-technologies" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-role">Your Role</label>
+                    <input type="text" id="project-role" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-image">Project Image</label>
+                    <input type="file" id="project-image" class="form-control" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="project-links">Links (format: Description|URL, separate with commas)</label>
+                    <input type="text" id="project-links" class="form-control" placeholder="GitHub|https://github.com...,Demo|https://demo.com...">
+                </div>
+                <button type="submit" class="btn btn-primary">Add Project</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Arya Muhammad Duta Syafinda. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
