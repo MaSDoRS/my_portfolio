@@ -1,456 +1,349 @@
-// --- Data Initialization ---
+// ---------- helper & initial data ----------
+const PROJECTS_KEY = 'portfolio_projects_v1';
+const PROFILE_IMG_KEY = 'portfolio_profile_img_v1';
 
-// Data Projects dan Training dimuat dari localStorage, atau menggunakan data dummy jika belum ada
-let projects = JSON.parse(localStorage.getItem('projects')) || [
-    {
-        id: 1,
-        title: "Medical Record Web App",
-        description: "A web application for managing patient medical records and appointments using MERN stack. Includes robust authentication and reporting features.",
-        technologies: ["React", "Node.js", "MongoDB", "Express"],
-        role: "Full-stack Developer",
-        image: "https://via.placeholder.com/400x200/4a5568/ffffff?text=Medical+App",
-        links: [{ name: "GitHub", url: "#" }, { name: "Demo", url: "#" }]
-    },
-    {
-        id: 2,
-        title: "IoT Health Monitor",
-        description: "A system using Arduino/ESP32 to monitor heart rate and body temperature, sending data to a cloud platform for real-time analysis.",
-        technologies: ["Arduino C++", "ESP32", "Firebase", "Python"],
-        role: "Firmware Engineer",
-        image: "https://via.placeholder.com/400x200/4a5568/ffffff?text=IoT+Monitor",
-        links: [{ name: "Demo Video", url: "#" }]
-    }
+const defaultProjects = [
+  {
+    id: genId(),
+    title: "Smart Health IoT",
+    description: "Prototype alat monitoring vital sign berbasis Arduino + ESP8266, dashboard sederhana.",
+    technologies: ["Arduino", "ESP8266", "HTML"],
+    role: "Firmware & Frontend",
+    image: "https://via.placeholder.com/800x400?text=Smart+Health+IoT",
+    links: [{desc:"GitHub", url:"https://github.com/"}]
+  },
+  {
+    id: genId(),
+    title: "Data Processing Python",
+    description: "Pipeline untuk preprocessing dataset biosignal dan analisis statistik awal.",
+    technologies: ["Python", "Pandas", "NumPy"],
+    role: "Data Engineer",
+    image: "https://via.placeholder.com/800x400?text=Data+Processing",
+    links: [{desc:"Report", url:"https://example.com"}]
+  }
 ];
 
-let trainingList = JSON.parse(localStorage.getItem('trainingList')) || [
-    "AWS Certified Cloud Practitioner - Amazon Web Services (In Progress)",
-    "Data Science Fundamentals with Python - Coursera (Completed)",
-    "Introduction to IoT Development - EdX (Completed)",
-    "Organizational Management Training - ITS Student Union"
-];
+function genId() {
+  return 'p_' + Math.random().toString(36).slice(2,9);
+}
 
-// Inisialisasi DOM elements untuk modal
+function readJson(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch(e) { return null; }
+}
+function writeJson(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+
+// ---------- DOM references ----------
+const projectsContainer = document.getElementById('projects-container');
 const projectModal = document.getElementById('projectModal');
 const projectForm = document.getElementById('project-form');
+const projectTitle = document.getElementById('project-title');
+const projectDescription = document.getElementById('project-description');
+const projectTechnologies = document.getElementById('project-technologies');
+const projectRole = document.getElementById('project-role');
+const projectImage = document.getElementById('project-image');
+const projectLinks = document.getElementById('project-links');
+const projectIdInput = document.getElementById('project-id');
+const modalTitle = document.getElementById('modal-title');
+const profileImageInput = document.getElementById('image-upload');
+const profileImageEl = document.getElementById('profile-image');
 
-
-// --- Core Functions ---
-
+// ---------- Load / init ----------
 document.addEventListener('DOMContentLoaded', () => {
-    // Inisialisasi AOS (Animate On Scroll)
-    AOS.init({
-        duration: 1000,
-        once: true,
-    });
-    renderProjects();
-    renderTraining();
-    setupEventListeners();
+  // init AOS if available
+  if (window.AOS) AOS.init();
+
+  // ensure admin nav visible if mode active in body
+  toggleAdminNavVisibility();
+
+  // load profile image
+  const savedProfile = localStorage.getItem(PROFILE_IMG_KEY);
+  if (savedProfile) profileImageEl.src = savedProfile;
+
+  // load projects (fallback default)
+  let stored = readJson(PROJECTS_KEY);
+  if (!stored || !Array.isArray(stored) || stored.length === 0) {
+    writeJson(PROJECTS_KEY, defaultProjects);
+    stored = defaultProjects;
+  }
+  renderProjects(stored);
+
+  // hamburger toggle (responsive)
+  const hamburger = document.querySelector('.hamburger');
+  const navMenu = document.querySelector('.nav-menu');
+  hamburger?.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    navMenu.classList.toggle('active');
+  });
 });
 
-
-// --- Data Persistence (localStorage) ---
-
-function saveProjects() {
-    localStorage.setItem('projects', JSON.stringify(projects));
+// ---------- Projects rendering ----------
+function renderProjects(list) {
+  projectsContainer.innerHTML = '';
+  list.forEach(proj => {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.dataset.id = proj.id;
+    card.innerHTML = `
+      <img class="project-image" src="${escapeHtml(proj.image || 'https://via.placeholder.com/800x400?text=No+Image')}" alt="${escapeHtml(proj.title)}">
+      <div class="project-content">
+        <h3>${escapeHtml(proj.title)}</h3>
+        <p>${escapeHtml(proj.description)}</p>
+        <div class="project-technologies">${(proj.technologies||[]).map(t=>`<span class="technology-tag">${escapeHtml(t)}</span>`).join('')}</div>
+        <div class="project-role"><strong>Role:</strong> ${escapeHtml(proj.role || '')}</div>
+        <div class="project-links">
+          ${(proj.links||[]).map(l => `<a class="project-link" href="${escapeAttr(l.url)}" target="_blank">${escapeHtml(l.desc)}</a>`).join('')}
+        </div>
+        <div class="project-actions">
+          <button class="btn btn-primary admin-only" onclick="openEditProject('${proj.id}')"><i class="fas fa-edit"></i> Edit</button>
+          <button class="btn btn-danger admin-only" onclick="deleteProject('${proj.id}')"><i class="fas fa-trash"></i> Delete</button>
+        </div>
+      </div>
+    `;
+    projectsContainer.appendChild(card);
+  });
+  // ensure admin-only elements visibility tied to body class
+  applyAdminVisibility();
 }
 
-function saveTraining() {
-    localStorage.setItem('trainingList', JSON.stringify(trainingList));
+// ---------- Modal show/hide ----------
+function showAddProjectModal() {
+  modalTitle.innerText = 'Add New Project';
+  projectIdInput.value = '';
+  projectTitle.value = '';
+  projectDescription.value = '';
+  projectTechnologies.value = '';
+  projectRole.value = '';
+  projectImage.value = '';
+  projectLinks.value = '';
+  openModal();
 }
 
-function generateId() {
-    // Menggunakan timestamp sebagai ID unik
-    return Date.now();
+function openEditProject(id) {
+  const projects = readJson(PROJECTS_KEY) || [];
+  const proj = projects.find(p => p.id === id);
+  if (!proj) return alert('Project not found');
+  modalTitle.innerText = 'Edit Project';
+  projectIdInput.value = proj.id;
+  projectTitle.value = proj.title || '';
+  projectDescription.value = proj.description || '';
+  projectTechnologies.value = (proj.technologies || []).join(', ');
+  projectRole.value = proj.role || '';
+  projectImage.value = ''; // empty file input - optional replace
+  projectLinks.value = (proj.links || []).map(l => `${l.desc}|${l.url}`).join(',');
+  openModal();
 }
 
-
-// --- Project Section Functions ---
-
-function renderProjects() {
-    const container = document.getElementById('projects-container');
-    container.innerHTML = '';
-    
-    if (projects.length === 0) {
-        container.innerHTML = '<p class="text-gray text-center">No projects added yet.</p>';
-    }
-
-    projects.forEach(project => {
-        // Render Links
-        const linksHtml = project.links.map(link => `
-            <a href="${link.url}" target="_blank" class="project-link">
-                <i class="fas fa-${link.name.toLowerCase().includes('github') ? 'github' : 'external-link-alt'}"></i>
-                ${link.name}
-            </a>
-        `).join('');
-
-        // Render Technology Tags
-        const techTags = project.technologies.map(tech => `
-            <span class="technology-tag">${tech}</span>
-        `).join('');
-
-        const projectCard = document.createElement('div');
-        projectCard.className = 'project-card';
-        projectCard.setAttribute('data-aos', 'zoom-in');
-        projectCard.innerHTML = `
-            <img src="${project.image}" alt="${project.title}" class="project-image">
-            <div class="project-content">
-                <h3>${project.title}</h3>
-                <p>${project.description}</p>
-                <div class="project-technologies">${techTags}</div>
-                <p><strong>Role:</strong> ${project.role}</p>
-                <div class="project-links">${linksHtml}</div>
-                
-                <div class="project-actions admin-only">
-                    <button class="btn btn-warning btn-edit" onclick="editProject(${project.id})">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger" onclick="deleteProject(${project.id})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
-            </div>
-        `;
-        container.appendChild(projectCard);
-    });
+function openModal() {
+  projectModal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
 }
-
-function deleteProject(id) {
-    if (confirm("Apakah Anda yakin ingin menghapus proyek ini?")) {
-        projects = projects.filter(p => p.id !== id);
-        saveProjects();
-        renderProjects();
-    }
-}
-
 function closeProjectModal() {
-    projectModal.style.display = 'none';
-    projectForm.reset();
-    document.getElementById('modal-title').textContent = 'Add New Project';
-    document.getElementById('project-id').value = '';
-    // Reset persyaratan gambar
-    document.getElementById('project-image').required = true; 
-    document.getElementById('current-image-info-small').remove(); // Hapus elemen kecil jika ada
-    
-    // Reset elemen small info gambar (untuk mencegah error jika belum ada)
-    const currentInfoElement = document.getElementById('current-image-info');
-    if (currentInfoElement) currentInfoElement.remove();
+  projectModal.style.display = 'none';
+  document.body.style.overflow = '';
 }
 
-/**
- * Menampilkan modal Add/Edit Project.
- * @param {object} project - Objek proyek yang akan diedit. Jika null, maka mode Add New.
- */
-function showAddProjectModal(project = null) {
-    // Panggil closeProjectModal untuk reset form dan elemen tersembunyi
-    // Sebelum memanggil showAddProjectModal, pastikan form ter-reset
-    projectForm.reset();
-    
-    // Hapus elemen current-image-info jika ada
-    let currentInfoElement = document.getElementById('current-image-info-small');
-    if (currentInfoElement) currentInfoElement.remove();
+// close modal on outside click
+window.addEventListener('click', (e) => {
+  if (e.target === projectModal) closeProjectModal();
+});
 
+// ---------- Form submit (add/edit) ----------
+projectForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = projectIdInput.value || null;
+  const title = projectTitle.value.trim();
+  const description = projectDescription.value.trim();
+  const technologies = projectTechnologies.value.split(',').map(s=>s.trim()).filter(Boolean);
+  const role = projectRole.value.trim();
+  const linksRaw = projectLinks.value.split(',').map(s=>s.trim()).filter(Boolean);
+  const links = linksRaw.map(item => {
+    const [desc, url] = item.split('|').map(x => x && x.trim());
+    return { desc: desc||'Link', url: url||'#' };
+  });
 
-    if (project) {
-        // --- Mode Edit ---
-        document.getElementById('modal-title').textContent = 'Edit Project';
-        document.getElementById('project-id').value = project.id;
-        document.getElementById('project-title').value = project.title;
-        document.getElementById('project-description').value = project.description;
-        document.getElementById('project-technologies').value = project.technologies.join(', ');
-        document.getElementById('project-role').value = project.role;
-        
-        // Konversi objek links ke string format: Deskripsi|URL,Deskripsi|URL
-        const linksString = project.links.map(link => `${link.name}|${link.url}`).join(',');
-        document.getElementById('project-links').value = linksString;
-        
-        // Gambar tidak wajib diubah saat edit, tampilkan info gambar saat ini
-        document.getElementById('project-image').required = false; 
-        
-        // Tambahkan elemen small untuk info gambar saat ini
-        const imageFormGroup = document.getElementById('project-image').closest('.form-group');
-        const smallElement = document.createElement('small');
-        smallElement.id = 'current-image-info-small';
-        smallElement.textContent = `Current Image: View image link or choose new file to replace.`;
-        if (imageFormGroup) {
-            imageFormGroup.appendChild(smallElement);
-        }
-
-    } else {
-        // --- Mode Add New ---
-        document.getElementById('modal-title').textContent = 'Add New Project';
-        document.getElementById('project-id').value = '';
-        document.getElementById('project-image').required = true; // Wajib ada gambar saat menambahkan baru
+  // handle image file input -> base64
+  const file = projectImage.files[0];
+  let imageData = null;
+  if (file) {
+    try {
+      imageData = await fileToDataUrl(file);
+    } catch (err) {
+      console.error(err);
+      alert('Gagal membaca gambar.');
+      return;
     }
-    projectModal.style.display = 'block';
-}
+  }
 
-function editProject(id) {
-    const projectToEdit = projects.find(p => p.id === id);
-    if (projectToEdit) {
-        showAddProjectModal(projectToEdit);
+  const projects = readJson(PROJECTS_KEY) || [];
+
+  if (id) {
+    // edit existing
+    const idx = projects.findIndex(p => p.id === id);
+    if (idx === -1) {
+      alert('Project tidak ditemukan');
+      return;
     }
-}
-
-// Event listener untuk submit form
-if (projectForm) {
-    projectForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        await saveProject(e);
+    projects[idx].title = title;
+    projects[idx].description = description;
+    projects[idx].technologies = technologies;
+    projects[idx].role = role;
+    projects[idx].links = links;
+    if (imageData) projects[idx].image = imageData; // replace only if new image selected
+  } else {
+    // add new
+    projects.unshift({
+      id: genId(),
+      title,
+      description,
+      technologies,
+      role,
+      image: imageData || 'https://via.placeholder.com/800x400?text=New+Project',
+      links
     });
+  }
+
+  writeJson(PROJECTS_KEY, projects);
+  renderProjects(projects);
+  closeProjectModal();
+});
+
+// ---------- Delete ----------
+function deleteProject(id) {
+  if (!confirm('Hapus project ini?')) return;
+  let projects = readJson(PROJECTS_KEY) || [];
+  projects = projects.filter(p => p.id !== id);
+  writeJson(PROJECTS_KEY, projects);
+  renderProjects(projects);
 }
 
-
-/**
- * Mengambil data dari form, menangani upload/dokumentasi foto, dan menyimpan/mengedit proyek.
- */
-async function saveProject(e) {
-    e.preventDefault();
-    
-    const id = document.getElementById('project-id').value;
-    const title = document.getElementById('project-title').value;
-    const description = document.getElementById('project-description').value;
-    const technologies = document.getElementById('project-technologies').value.split(',').map(t => t.trim()).filter(t => t);
-    const role = document.getElementById('project-role').value;
-    const imageFile = document.getElementById('project-image').files[0];
-    const linksString = document.getElementById('project-links').value;
-
-    // Fungsi utilitas untuk mengonversi link string ke array of objects
-    const parseLinks = (linkStr) => {
-        return linkStr.split(',').map(item => {
-            const parts = item.split('|');
-            return {
-                name: parts[0] ? parts[0].trim() : 'Link',
-                url: parts[1] ? parts[1].trim() : '#'
-            };
-        }).filter(link => link.name && link.url && link.url !== '#');
-    };
-
-    const links = parseLinks(linksString);
-
-    let imageUrl = '';
-    
-    // Logika untuk menangani foto/dokumentasi
-    if (imageFile) {
-        // Menggunakan FileReader untuk mendapatkan URL Data lokal (Data URL)
-        imageUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (event) => resolve(event.target.result);
-            reader.readAsDataURL(imageFile);
-        });
-        
-    }
-    
-    const newProject = {
-        title,
-        description,
-        technologies,
-        role,
-        links
-    };
-
-    if (id) {
-        // --- Mode Edit ---
-        const index = projects.findIndex(p => p.id === parseInt(id));
-        if (index !== -1) {
-            projects[index] = {
-                ...projects[index],
-                ...newProject,
-                id: parseInt(id),
-                // Ganti gambar hanya jika ada file baru, jika tidak, gunakan yang lama
-                image: imageUrl || projects[index].image 
-            };
-        }
-    } else {
-        // --- Mode Add New ---
-        if (!imageUrl) {
-            alert('Please select an image for the new project (Foto/Dokumentasi wajib).');
-            return;
-        }
-        projects.push({
-            id: generateId(),
-            ...newProject,
-            image: imageUrl
-        });
-    }
-
-    saveProjects();
-    renderProjects();
-    closeProjectModal();
+// ---------- utils ----------
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
 }
 
-
-// --- Training Section Functions ---
-
-function renderTraining() {
-    const container = document.getElementById('training-list');
-    // Asumsi list item training di-render dalam <ul>
-    container.innerHTML = `<ul>${trainingList.map(item => `<li>${item}</li>`).join('')}</ul>`;
+function escapeHtml(str='') {
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;');
+}
+function escapeAttr(str='') {
+  return (String(str)).replaceAll('"','%22');
 }
 
-// --- Content Edit Mode Functions (Admin Panel) ---
-
+// ---------- admin / edit mode ----------
 function enableEditMode() {
-    document.body.classList.add('edit-mode');
-    document.getElementById('admin').style.display = 'block';
-    renderProjects(); // Render ulang untuk menampilkan tombol edit/delete proyek
+  document.body.classList.add('edit-mode');
+  toggleAdminNavVisibility();
+  applyAdminVisibility();
+  // show admin panel link
+  document.querySelectorAll('.nav-item.admin-only').forEach(el => el.style.display = '');
+  // also show admin section
+  document.getElementById('admin').style.display = '';
 }
 
 function disableEditMode() {
-    document.body.classList.remove('edit-mode');
-    document.getElementById('admin').style.display = 'none';
-    renderProjects(); // Render ulang untuk menyembunyikan tombol edit/delete proyek
+  document.body.classList.remove('edit-mode');
+  toggleAdminNavVisibility();
+  applyAdminVisibility();
+  // hide admin nav and panel
+  document.querySelectorAll('.nav-item.admin-only').forEach(el => el.style.display = 'none');
+  document.getElementById('admin').style.display = 'none';
 }
 
-function toggleEdit(elementId) {
-    const element = document.getElementById(elementId);
-    const isEditing = element.classList.toggle('editing');
-    
-    if (isEditing) {
-        const originalContent = element.innerHTML.trim();
-        element.dataset.originalContent = originalContent;
-
-        if (elementId === 'about-description') {
-            // Logic untuk mengedit paragraf About
-            const textarea = document.createElement('textarea');
-            textarea.className = 'edit-textarea form-control';
-            // Membersihkan tag <p> dan menggantinya dengan baris baru untuk memudahkan editing
-            textarea.value = originalContent.replace(/<p>/g, '').replace(/<\/p>/g, '\n\n').trim();
-            element.innerHTML = '';
-            element.appendChild(textarea);
-            
-            const saveButton = document.createElement('button');
-            saveButton.className = 'btn btn-primary mt-3';
-            saveButton.textContent = 'Save Changes';
-            saveButton.onclick = () => saveContent(elementId, textarea.value);
-            element.appendChild(saveButton);
-
-        } else if (elementId === 'training-list') {
-            // Logic untuk mengedit daftar Training
-            const textarea = document.createElement('textarea');
-            textarea.className = 'edit-textarea form-control';
-            // Konversi array trainingList ke string dengan pemisah baris baru
-            textarea.value = trainingList.join('\n');
-            element.innerHTML = '';
-            element.appendChild(textarea);
-            
-            const saveButton = document.createElement('button');
-            saveButton.className = 'btn btn-primary mt-3';
-            saveButton.textContent = 'Save Changes';
-            saveButton.onclick = () => saveTrainingContent(textarea.value);
-            element.appendChild(saveButton);
-        } else {
-             // Logic sederhana untuk elemen lain (e.g., Education/Experience card)
-            const textarea = document.createElement('textarea');
-            textarea.className = 'edit-textarea form-control';
-            textarea.value = element.textContent.trim();
-            element.innerHTML = '';
-            element.appendChild(textarea);
-            
-            const saveButton = document.createElement('button');
-            saveButton.className = 'btn btn-primary mt-3';
-            saveButton.textContent = 'Save Changes';
-            saveButton.onclick = () => saveContent(elementId, textarea.value);
-            element.appendChild(saveButton);
-        }
-        
-    } else {
-        // Disabling edit mode (cancel or after save)
-        if (elementId === 'training-list') {
-            renderTraining();
-        } else {
-            // Kembalikan ke konten asli jika dibatalkan (asumsi tidak ada fungsi "Cancel")
-            element.innerHTML = element.dataset.originalContent;
-        }
-    }
+function applyAdminVisibility() {
+  const adminEnabled = document.body.classList.contains('edit-mode');
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = adminEnabled ? '' : 'none';
+  });
 }
 
-function saveTrainingContent(content) {
-    // Memecah teks menjadi array, membersihkan spasi, dan memfilter item kosong
-    trainingList = content.split('\n').map(item => item.trim()).filter(item => item);
-    saveTraining();
-    // Nonaktifkan mode edit dan render ulang list training
-    const element = document.getElementById('training-list');
-    element.classList.remove('editing');
-    renderTraining();
+function toggleAdminNavVisibility() {
+  const adminNav = document.querySelector('.nav-item.admin-only');
+  if (!adminNav) return;
+  // show/hide handled in applyAdminVisibility called after
 }
 
-
-function saveContent(elementId, newContent) {
-    const element = document.getElementById(elementId);
-    
-    // Logika penyimpanan sederhana (hanya ke DOM)
-    if (elementId === 'about-description') {
-        // Konversi baris baru ganda menjadi paragraf
-        const paragraphs = newContent.split('\n\n').map(p => `<p>${p.trim()}</p>`).join('');
-        element.innerHTML = paragraphs;
-    } else {
-        // Untuk Education/Experience atau elemen teks lainnya
-        element.innerHTML = newContent; 
-    }
-
-    element.classList.remove('editing');
-    alert('Content saved to DOM. Note: Only Projects and Training data are permanently saved to localStorage.');
-}
-
-// --- Utility/Event Listeners ---
-
-function setupEventListeners() {
-    // Navigasi Hamburger
-    const hamburger = document.querySelector('.hamburger');
-    const navMenu = document.querySelector('.nav-menu');
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navMenu.classList.toggle('active');
-    });
-
-    // Navigasi saat klik link
-    document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
-    }));
-
-    // Event listener untuk menutup modal saat klik di luar
-    window.addEventListener('click', (event) => {
-        if (event.target === projectModal) {
-            closeProjectModal();
-        }
-    });
-
-    // Ganti foto profil (simulasi upload)
-    document.getElementById('image-upload').addEventListener('change', function(e) {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                document.getElementById('profile-image').src = event.target.result;
-                alert('Profile photo changed successfully!');
-            };
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
-}
-
+// ---------- export / reset ----------
 function exportData() {
-    const data = {
-        projects: projects,
-        training: trainingList,
-        // Tambahkan data lain yang perlu diekspor jika diperlukan
-    };
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'arya-portfolio-data.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const projects = readJson(PROJECTS_KEY) || [];
+  const profile = localStorage.getItem(PROFILE_IMG_KEY) || '';
+  const payload = {projects, profile};
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'portfolio-data.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function resetData() {
-    if (confirm("Are you sure you want to reset all data to default? This action cannot be undone.")) {
-        localStorage.removeItem('projects');
-        localStorage.removeItem('trainingList');
-        window.location.reload();
+  if (!confirm('Reset semua data ke default?')) return;
+  writeJson(PROJECTS_KEY, defaultProjects);
+  localStorage.removeItem(PROFILE_IMG_KEY);
+  profileImageEl.src = 'https://via.placeholder.com/300x300/2d3748/ffffff?text=Profile+Photo';
+  renderProjects(defaultProjects);
+  alert('Reset selesai');
+}
+
+// ---------- profile image change ----------
+profileImageInput?.addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    const dataUrl = await fileToDataUrl(f);
+    profileImageEl.src = dataUrl;
+    localStorage.setItem(PROFILE_IMG_KEY, dataUrl);
+  } catch (err) {
+    console.error(err);
+    alert('Gagal upload foto profil');
+  }
+});
+
+// ---------- inline editable helper for other sections ----------
+function toggleEdit(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const isEditing = el.classList.contains('editing');
+  if (!isEditing) {
+    // enter editing mode: replace content with textarea for convenience
+    el.classList.add('editing');
+    const current = el.innerHTML;
+    const ta = document.createElement('textarea');
+    ta.className = 'edit-textarea';
+    ta.value = stripHtml(current);
+    ta.dataset.prev = current;
+    el.dataset.prev = current;
+    el.innerHTML = '';
+    el.appendChild(ta);
+    const btn = event?.currentTarget;
+    if (btn && btn.tagName === 'BUTTON') btn.innerText = 'Save';
+  } else {
+    // save
+    const ta = el.querySelector('textarea');
+    if (ta) {
+      el.innerHTML = ta.value.replaceAll('\n','<br>');
     }
+    el.classList.remove('editing');
+    const btn = event?.currentTarget;
+    if (btn && btn.tagName === 'BUTTON') btn.innerText = 'Edit';
+    // (optionally) persist to localStorage - skipping per-section naming complexity
+  }
+}
+
+function stripHtml(html='') {
+  return html.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
 }
