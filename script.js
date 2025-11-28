@@ -1,4 +1,4 @@
-// Initialize AOS (Animate On Scroll)
+// Initialize AOS
 AOS.init({
     duration: 800,
     once: true,
@@ -8,25 +8,31 @@ AOS.init({
 // Global variables
 let isEditMode = false;
 let portfolioData = {};
+let currentEditingProject = null;
 
 // Initialize portfolio data
 function initializePortfolioData() {
-    // Check if data exists in localStorage
     const savedData = localStorage.getItem('portfolioData');
+    const urlParams = new URLSearchParams(window.location.search);
     
     if (savedData) {
         portfolioData = JSON.parse(savedData);
-        loadPortfolioData();
     } else {
-        // Load default data
         loadDefaultData();
     }
     
-    // Check for admin mode in URL
-    const urlParams = new URLSearchParams(window.location.search);
+    loadPortfolioData();
+    
+    // Check admin mode
     if (urlParams.get('admin') === 'true') {
         enableEditMode();
     }
+    
+    // Force show training section
+    setTimeout(() => {
+        document.getElementById('training').style.opacity = '1';
+        document.getElementById('training').style.visibility = 'visible';
+    }, 100);
 }
 
 // Load default data
@@ -144,7 +150,6 @@ function loadDefaultData() {
     };
     
     savePortfolioData();
-    loadPortfolioData();
 }
 
 // Load data to the page
@@ -168,6 +173,11 @@ function loadPortfolioData() {
     
     // Load projects
     loadProjects();
+    
+    // Force show training section
+    const trainingSection = document.getElementById('training');
+    trainingSection.style.opacity = '1';
+    trainingSection.style.visibility = 'visible';
 }
 
 // Load education data
@@ -240,6 +250,13 @@ function loadProjects() {
             </a>`
         ).join('');
         
+        const editButtons = isEditMode ? `
+            <div class="project-actions admin-only">
+                <button class="btn-edit" onclick="editProject(${project.id})">Edit</button>
+                <button class="btn-edit" style="background: #e53e3e; border-color: #e53e3e;" onclick="deleteProject(${project.id})">Delete</button>
+            </div>
+        ` : '';
+        
         projectCard.innerHTML = `
             <img src="${project.image}" alt="${project.title}" class="project-image">
             <div class="project-content">
@@ -252,7 +269,7 @@ function loadProjects() {
                 <div class="project-links">
                     ${linksHTML}
                 </div>
-                ${isEditMode ? `<button class="btn-edit" onclick="deleteProject(${project.id})">Delete Project</button>` : ''}
+                ${editButtons}
             </div>
         `;
         
@@ -270,20 +287,16 @@ function enableEditMode() {
     isEditMode = true;
     document.body.classList.add('edit-mode');
     document.getElementById('admin').style.display = 'block';
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = 'block';
-    });
-    loadProjects(); // Reload projects to show delete buttons
+    loadProjects(); // Reload projects to show edit buttons
+    showNotification('Edit mode enabled!', 'success');
 }
 
 function disableEditMode() {
     isEditMode = false;
     document.body.classList.remove('edit-mode');
     document.getElementById('admin').style.display = 'none';
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = 'none';
-    });
-    loadProjects(); // Reload projects to hide delete buttons
+    loadProjects(); // Reload projects to hide edit buttons
+    showNotification('Edit mode disabled!', 'success');
 }
 
 // Toggle edit for specific section
@@ -385,16 +398,41 @@ function saveSectionChanges(sectionId, element) {
     
     savePortfolioData();
     loadPortfolioData();
+    showNotification('Changes saved successfully!', 'success');
 }
 
 // Project management
 function showAddProjectModal() {
-    document.getElementById('addProjectModal').style.display = 'block';
+    currentEditingProject = null;
+    document.getElementById('modal-title').textContent = 'Add New Project';
+    document.getElementById('project-form').reset();
+    document.getElementById('project-id').value = '';
+    document.getElementById('project-modal').style.display = 'block';
 }
 
-function closeAddProjectModal() {
-    document.getElementById('addProjectModal').style.display = 'none';
-    document.getElementById('project-form').reset();
+function showEditProjectModal(projectId) {
+    const project = portfolioData.projects.find(p => p.id === projectId);
+    if (!project) return;
+    
+    currentEditingProject = project;
+    document.getElementById('modal-title').textContent = 'Edit Project';
+    document.getElementById('project-id').value = project.id;
+    document.getElementById('project-title').value = project.title;
+    document.getElementById('project-description').value = project.description;
+    document.getElementById('project-technologies').value = project.technologies.join(', ');
+    document.getElementById('project-role').value = project.role;
+    document.getElementById('project-links').value = project.links.map(link => `${link.text}|${link.url}`).join(', ');
+    
+    document.getElementById('project-modal').style.display = 'block';
+}
+
+function closeProjectModal() {
+    document.getElementById('project-modal').style.display = 'none';
+    currentEditingProject = null;
+}
+
+function editProject(projectId) {
+    showEditProjectModal(projectId);
 }
 
 function deleteProject(projectId) {
@@ -402,10 +440,11 @@ function deleteProject(projectId) {
         portfolioData.projects = portfolioData.projects.filter(project => project.id !== projectId);
         savePortfolioData();
         loadProjects();
+        showNotification('Project deleted successfully!', 'success');
     }
 }
 
-// Add new project
+// Add/Edit project form handler
 document.getElementById('project-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -428,30 +467,46 @@ document.getElementById('project-form').addEventListener('submit', function(e) {
         });
     }
     
-    // Handle image
-    let imageURL = 'https://via.placeholder.com/350x200/2d3748/ffffff?text=New+Project';
+    let imageURL = currentEditingProject ? currentEditingProject.image : 'https://via.placeholder.com/350x200/2d3748/ffffff?text=New+Project';
+    
     if (imageFile) {
         imageURL = URL.createObjectURL(imageFile);
     }
     
-    // Add new project
-    const newProject = {
-        id: portfolioData.projects.length > 0 ? Math.max(...portfolioData.projects.map(p => p.id)) + 1 : 1,
-        title,
-        description,
-        technologies,
-        role,
-        image: imageURL,
-        links
-    };
+    if (currentEditingProject) {
+        // Update existing project
+        const projectIndex = portfolioData.projects.findIndex(p => p.id === currentEditingProject.id);
+        if (projectIndex !== -1) {
+            portfolioData.projects[projectIndex] = {
+                ...portfolioData.projects[projectIndex],
+                title,
+                description,
+                technologies,
+                role,
+                image: imageURL,
+                links
+            };
+        }
+        showNotification('Project updated successfully!', 'success');
+    } else {
+        // Add new project
+        const newProject = {
+            id: portfolioData.projects.length > 0 ? Math.max(...portfolioData.projects.map(p => p.id)) + 1 : 1,
+            title,
+            description,
+            technologies,
+            role,
+            image: imageURL,
+            links
+        };
+        
+        portfolioData.projects.push(newProject);
+        showNotification('Project added successfully!', 'success');
+    }
     
-    portfolioData.projects.push(newProject);
     savePortfolioData();
     loadProjects();
-    closeAddProjectModal();
-    
-    // Show success message
-    showNotification('Project added successfully!', 'success');
+    closeProjectModal();
 });
 
 // Profile image upload
@@ -468,8 +523,6 @@ document.getElementById('image-upload').addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
-
-// Contact info editing (simplified - would need more complex implementation for individual field editing)
 
 // Admin functions
 function exportData() {
@@ -491,14 +544,8 @@ function resetData() {
     }
 }
 
-function addNewSection() {
-    // Implementation for adding new sections would go here
-    showNotification('New section feature coming soon!', 'warning');
-}
-
 // Notification system
 function showNotification(message, type = 'info') {
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
@@ -506,7 +553,6 @@ function showNotification(message, type = 'info') {
         <button onclick="this.parentElement.remove()">&times;</button>
     `;
     
-    // Add styles
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -525,7 +571,6 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Auto remove after 3 seconds
     setTimeout(() => {
         if (notification.parentElement) {
             notification.remove();
@@ -585,6 +630,12 @@ document.addEventListener('DOMContentLoaded', function() {
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        
+        /* Pastikan training section selalu terlihat */
+        #training {
+            opacity: 1 !important;
+            visibility: visible !important;
         }
     `;
     document.head.appendChild(style);
